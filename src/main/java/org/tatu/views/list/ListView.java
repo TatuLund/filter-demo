@@ -72,6 +72,7 @@ public class ListView extends Div {
 
     private void createGridComponent() {
         grid = new GridPro<>();
+        grid.setEditOnClick(true);
         grid.setSelectionMode(SelectionMode.MULTI);
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER,
                 GridVariant.LUMO_COLUMN_BORDERS);
@@ -112,11 +113,21 @@ public class ListView extends Div {
                 .addEditColumn(Client::getAmount,
                         new NumberRenderer<>(client -> client.getAmount(),
                                 NumberFormat.getCurrencyInstance(Locale.US)))
-                .text((item, newValue) -> item
-                        .setAmount(Double.parseDouble(newValue)))
+                .text((item, newValue) -> valueUpdater(item, newValue))
                 .setComparator(client -> client.getAmount())
                 .setHeader("Amount");
     }
+
+	private void valueUpdater(Client item, String newValue) {
+		item
+		        .setAmount(Double.parseDouble(newValue));
+		try {
+			Thread.sleep(4000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
     private void createStatusColumn() {
         statusColumn = grid.addEditColumn(Client::getClient,
@@ -187,17 +198,18 @@ public class ListView extends Div {
 //        statusButton.addClickListener(event -> {
 //        	statusPopup.setOpened(true);
 //        });
+//      statusFilter.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         MultiselectComboBox<String> statusFilter = new MultiselectComboBox<>();
-//        statusFilter.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         filterRow.getCell(statusColumn).setComponent(statusFilter);
         statusFilter.setItems(Arrays.asList("Pending", "Success", "Error"));
         statusFilter.setWidth("100%");
         statusFilter.setPlaceholder("filter");
 //        statusFilter.setCompactMode(true);
+        
         statusFilter.addValueChangeListener(event -> {
-        	System.out.println("--");
-        	statusFilter.getValue().forEach(item -> System.out.println(item));
+        	statusFilter.getElement().executeJs("this.inputElement.value=''");
         	dataProvider.addFilter(client -> areStatusesEqual(client, statusFilter));
+        	statusFilter.getElement().executeJs("this.$.comboBox.close();");
         });
                 
 //        statusPopup.add(statusFilter);
